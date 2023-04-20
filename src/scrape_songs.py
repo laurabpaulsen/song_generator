@@ -5,17 +5,18 @@ import os
 from pathlib import Path
 from langdetect import detect
 
-def get_json(path):
+def get_json(path, genius_token):
     '''Send request and get response in json format.'''
 
     # Generate request URL
     requrl = '/'.join(["www.api.genius.com", path])
-    token = "Bearer {}".format("")
+    token = "Bearer {}".format(genius_token)
     headers = {"Authorization": token}
 
     # Get response object from querying genius api
     response = requests.get(url=requrl, params=None, headers=headers)
     response.raise_for_status()
+    
     return response.json()
 
 def get_song_id(artist_id):
@@ -44,7 +45,7 @@ def get_song_id(artist_id):
 
 
 # Get artist object from Genius API
-def request_artist_info(artist_name, page):
+def request_artist_info(artist_name, page, genius_token):
     """ 
     Get the artist's information from Genius.com
 
@@ -62,7 +63,7 @@ def request_artist_info(artist_name, page):
     """
     
     base_url = 'https://api.genius.com'
-    headers = {'Authorization': 'Bearer ' + "hkpU8WtKgk18vFkrV6sTN_2NgDKDJcPsf_3pOcPIbC0kMGnVMe8HrB-Cj9RhZNDb"}
+    headers = {'Authorization': 'Bearer ' + genius_token}
     search_url = base_url + '/search?per_page=10&page=' + str(page)
     data = {'q': artist_name}
     response = requests.get(search_url, data=data, headers=headers)
@@ -70,7 +71,7 @@ def request_artist_info(artist_name, page):
     return response
 
 
-def song_urls(artist_name: str, n: int = 10):
+def song_urls(artist_name: str, genius_token: str, n: int = 10):
     """
     Get the urls of the songs of an artist
     
@@ -85,7 +86,7 @@ def song_urls(artist_name: str, n: int = 10):
     songs = []
     
     while True:
-        response = request_artist_info(artist_name, page)
+        response = request_artist_info(artist_name, page, genius_token)
         json = response.json()
         # Collect up to n song objects from artist
         song_info = []
@@ -103,6 +104,11 @@ def song_urls(artist_name: str, n: int = 10):
             break
         else:
             page += 1
+       
+       # If no songs are found before page 10 is reached, return an empty list
+        if page > 20:
+            print('No songs found for {}'.format(artist_name))
+            return []
         
     print('Found {} songs by {}'.format(len(songs), artist_name))
     return songs
@@ -142,7 +148,7 @@ def scrape_lyrics(song_url):
     
     return lyrics
 
-def scrape_songs(artist_name, n):
+def scrape_songs(artist_name, genius_token, n):
     """
     Scrape n songs from an artist
 
@@ -158,7 +164,7 @@ def scrape_songs(artist_name, n):
     lyrics : list
         A list of the lyrics of the songs from the artist
     """
-    urls = song_urls(artist_name, n)
+    urls = song_urls(artist_name, genius_token, n)
     lyrics = []
 
     for url in urls:
@@ -186,7 +192,7 @@ def check_lyrics(lyrics: str):
     
     return False
 
-def main_scraper(artists, n_songs, save_path):
+def main_scraper(artists, n_songs, save_path, genius_token):
     """
     Scrapes songs from a list of artists and saves them as as separate text files
 
@@ -204,7 +210,7 @@ def main_scraper(artists, n_songs, save_path):
     None
     """
     for artist in artists:
-        lyrics = scrape_songs(artist, n_songs)
+        lyrics = scrape_songs(artist, genius_token, n_songs)
         
         for i, lyric in enumerate(lyrics):
             # check that language is danish and that the lyrics are not empty
@@ -223,11 +229,37 @@ if __name__ == '__main__':
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # artists to scrape
-    artists = ["Kim Larsen", "Sanne Salomonsen", "Thomas Helmig", "Lis Sørensen", "Natasja"]
+    # get token from txt
+    with open(path.parents[1] / "TOKEN.txt") as f:
+        genius_token = f.read()
 
+
+    # artists to scrape
+    artists = ["Andreas Odbjerg", "Kim Larsen", "Sanne Salomonsen", "Thomas Helmig", "Lis Sørensen",  "Natasja", 
+        "The Minds Of 99", "Medina", "Burhan G", "Peter Sommer", "Katinka Band", "Tessa", 
+        "De Danske Hyrder", "Thomas Buttenschøn", "Rigmor", "Marie Key", "Nephew", 
+        "Magtens Korridorer", "Bogfinkevej", "Tobias Rahim",  "Ukendt Kunstner",
+        "Guldimund", "Ulige numre", "Gulddreng", "Pharfar",
+        "Benjamin Hav", "Benal", "KESI", "Rasmus Seebach", "Søren Huss", "Barselona",
+        "Panamah", "Jacob Aksglæde", "Thøger Dixgaard", 
+        "Carl Emil Petersen", "Jung", "Flødeklinikken", "Karl William", "Danseorkesteret",
+        "TÅRN", "TV-2", "Hjalmer", "Hans Phillip", "Folkeklubben", "Sys Bjerre", 
+        "C.V. Jørgensen", "Mads Langer", "Silas Bjerregaard", "Claus Hempler", "Shaka Loveless",
+        "Barbara Moleko", "L.O.C.", "Emil Kruse", "TopGunn", "Citybois", "NOAH", "Anne Linnet",
+        "Joey Moe", "Gasolin", "Tøsedrengene", "Lars Lilholt Band", "Poul Krebs", "Blæst",
+        "Birthe Kjær", "Shu-Bi-Dua", "Tim Christensen", "Gnags", "Johnny Deluxe", "Rasmus Walter",
+        "Medina", "Tue West", "Suspekt", "Szhirley", "Anna David", "Hej Matematik",
+        "Lizzie", "Jokeren", "Blak", "Brødrene Olsen", "Ray Dee Ohh", "Flemming Bamse Jørgensen",
+        "Rollo og King", "Back to Back", "Dodo & the Dodos", "John Mogensen", "Bamses Venner",
+        "Tørfisk", "Jakob Sveistrup", "Rocazino", "Danser med Drenge", "Sømændene",
+        "Laban", "Tommy Seebach", "Alberte Winding"]
+
+
+    """ already scraped:
+
+    """
     # number of songs to scrape per artist
     n_songs = 30
 
-    main_scraper(artists, n_songs, output_dir)
+    main_scraper(artists, n_songs, output_dir, genius_token)
 

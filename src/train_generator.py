@@ -66,7 +66,7 @@ def pack_tensor(new_tensor, packed_tensor, max_seq_len):
         packed_tensor = torch.cat([new_tensor, packed_tensor[:, 1:]], dim=1)
         return packed_tensor, True, None
 
-def train(dataset, model, tokenizer, batch_size=16, epochs=5, lr=2e-5, max_seq_len=400, warmup_steps=200, gpt2_type="gpt2", output_dir=".", output_prefix="wreckgar", test_mode=False,save_model_on_epoch=False):
+def train(dataset, model, tokenizer, batch_size=16, epochs=5, lr=2e-5, max_seq_len=400, warmup_steps=200, gpt2_type="gpt2"):
     """
     Finetunes a GPT-2 model on a dataset
 
@@ -90,11 +90,6 @@ def train(dataset, model, tokenizer, batch_size=16, epochs=5, lr=2e-5, max_seq_l
         The number of warmup steps to use, by default 200
     gpt2_type : str, optional
         The type of GPT-2 model to use, by default "gpt2"
-    output_dir : str, optional
-        The directory to save the model to, by default "."
-    output_prefix : str, optional
-        The prefix to use when saving the model, by default "wreckgar"
-    test_mode : bool, optional
 
     Returns
     -------
@@ -103,8 +98,8 @@ def train(dataset, model, tokenizer, batch_size=16, epochs=5, lr=2e-5, max_seq_l
     """
 
     acc_steps = 100
-    device=torch.device("cuda")
-    model = model.cuda()
+    device = torch.device("cpu")
+    #model = model.cuda()
     model.train()
 
     optimizer = AdamW(model.parameters(), lr=lr)
@@ -141,18 +136,13 @@ def train(dataset, model, tokenizer, batch_size=16, epochs=5, lr=2e-5, max_seq_l
             accumulating_batch_count += 1
             input_tensor = None
         
-        if save_model_on_epoch:
-            torch.save(
-                model.state_dict(),
-                output_dir / f"{output_prefix}-{epoch}.pt",
-            )
     return model
 
 
 if __name__ == '__main__':
     # output directory
-    path = Path(__file__).parents[1] / 'data' / 'lyrics'
-    txts = load_txts(path)
+    path = Path(__file__).parents[1]
+    txts = load_txts(path / 'data' / 'lyrics')
 
     # prep dataset
     dataset = SongLyrics(data=txts, control_code="lyrics")
@@ -162,6 +152,9 @@ if __name__ == '__main__':
     model = GPT2LMHeadModel.from_pretrained('gpt2')
 
     model = train(dataset, model, tokenizer)
+
+    # save model
+    torch.save(model.state_dict(), path / "mdl" / "finetuned_gpt-2.pt")
 
 
 
