@@ -235,31 +235,31 @@ if __name__ == '__main__':
 
 
     # artists to scrape
-    artists = ["Andreas Odbjerg", "Kim Larsen", "Sanne Salomonsen", "Thomas Helmig", "Lis Sørensen",  "Natasja", 
-        "The Minds Of 99", "Medina", "Burhan G", "Peter Sommer", "Katinka Band", "Tessa", 
-        "De Danske Hyrder", "Thomas Buttenschøn", "Rigmor", "Marie Key", "Nephew", 
-        "Magtens Korridorer", "Bogfinkevej", "Tobias Rahim",  "Ukendt Kunstner",
-        "Guldimund", "Ulige numre", "Gulddreng", "Pharfar",
-        "Benjamin Hav", "Benal", "KESI", "Rasmus Seebach", "Søren Huss", "Barselona",
-        "Panamah", "Jacob Aksglæde", "Thøger Dixgaard", 
-        "Carl Emil Petersen", "Jung", "Flødeklinikken", "Karl William", "Danseorkesteret",
-        "TÅRN", "TV-2", "Hjalmer", "Hans Phillip", "Folkeklubben", "Sys Bjerre", 
-        "C.V. Jørgensen", "Mads Langer", "Silas Bjerregaard", "Claus Hempler", "Shaka Loveless",
-        "Barbara Moleko", "L.O.C.", "Emil Kruse", "TopGunn", "Citybois", "NOAH", "Anne Linnet",
-        "Joey Moe", "Gasolin", "Tøsedrengene", "Lars Lilholt Band", "Poul Krebs", "Blæst",
-        "Birthe Kjær", "Shu-Bi-Dua", "Tim Christensen", "Gnags", "Johnny Deluxe", "Rasmus Walter",
-        "Medina", "Tue West", "Suspekt", "Szhirley", "Anna David", "Hej Matematik",
-        "Lizzie", "Jokeren", "Blak", "Brødrene Olsen", "Ray Dee Ohh", "Flemming Bamse Jørgensen",
-        "Rollo og King", "Back to Back", "Dodo & the Dodos", "John Mogensen", "Bamses Venner",
-        "Tørfisk", "Jakob Sveistrup", "Rocazino", "Danser med Drenge", "Sømændene",
-        "Laban", "Tommy Seebach", "Alberte Winding"]
+    artists = ["Gasolin’", "Gasolin", "Tøsedrengene", "Poul Krebs", "Blæst",
+        "Birthe Kjr", "Tue West", "Suspekt", "Szhirley", "Brødrene Olsen", "Ray Dee Ohh", "Flemming Bamse Jørgensen",
+        "Rollo og King", "Back to Back", "Dodo & the Dodos",  "Bamses Venner", "Tørfisk", "Jakob Sveistrup", "Rocazino", "Danser med Drenge", "Sømændene", 
+        "Laban", "Tommy Seebach", "Alberte Winding", "Panamah", "Tobias Rahim"]
 
 
     """ already scraped:
+    "Andreas Odbjerg", "Kim Larsen", "Sanne Salomonsen", "Thomas Helmig", "Lis Sørensen", 
+        "The Minds Of 99", "Medina", "Burhan G", "Peter Sommer", "Katinka Band", "Tessa", 
+        "De Danske Hyrder", "Thomas Buttenschøn", "Rigmor", "Marie Key", "Nephew", 
+        "Magtens Korridorer", "Bogfinkevej", "Tobias Rahim",  "Ukendt Kunstner",
+        "Guldimund", "Ulige numre", "Gulddreng", "Pharfar",  "Natasja",
+        "Benjamin Hav", "Benal", "KESI", "Rasmus Seebach", "Søren Huss", "Barselona",
+        "Carl Emil Petersen", "Karl William", "Danseorkesteret", "Kim Larsen", "Hjalmer",  
+        "Folkeklubben", "Sys Bjerre", "C.V. Jørgensen", "Mads Langer", "Shaka Loveless",
+        "Emil Kruse", "TopGunn", "Citybois", "Joey Moe",  "Jokeren", "Blak", "Hans Philip",
+        "Anne Linnet","Lars Lilholt Band", "Shu-Bi-Dua", "Tim Christensen", "Lizzie", 
+        "Hej Matematik", "Medina", "Anna David",  "Johnny Deluxe", "Rasmus Walter",
+        "Gnags", "John Mogensen",
+
+
 
     """
     # number of songs to scrape per artist
-    n_songs = 30
+    n_songs = 20
 
     main_scraper(artists, n_songs, output_dir, genius_token)
 

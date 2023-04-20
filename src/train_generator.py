@@ -14,8 +14,8 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 
 class SongLyrics(Dataset):  
-    def __init__(self, control_code, data, gpt2_type="gpt2", max_length=1024,):
-        self.tokenizer = GPT2Tokenizer.from_pretrained(gpt2_type)
+    def __init__(self, data, tokenizer, control_code, max_length=1024):
+        self.tokenizer = tokenizer
         self.lyrics = []
 
         for dat in data:
@@ -57,6 +57,14 @@ def load_txts(path: Path):
 
     return txts
 
+def clean_lyrics(lyrics:list):
+    # Remove everything before the first time it says "Lyrics" (title of the song, contributor, etc.)
+    for i, lyric in enumerate(lyrics):
+        lyrics[i] = lyric[lyric.find("Lyrics")+7:]
+    
+    
+    return lyrics
+
 def pack_tensor(new_tensor, packed_tensor, max_seq_len):
     if packed_tensor is None:
         return new_tensor, True, None
@@ -66,7 +74,7 @@ def pack_tensor(new_tensor, packed_tensor, max_seq_len):
         packed_tensor = torch.cat([new_tensor, packed_tensor[:, 1:]], dim=1)
         return packed_tensor, True, None
 
-def train(dataset, model, tokenizer, batch_size=16, epochs=5, lr=2e-5, max_seq_len=400, warmup_steps=200, gpt2_type="gpt2"):
+def train(dataset, model, batch_size=16, epochs=5, lr=2e-5, warmup_steps=200):
     """
     Finetunes a GPT-2 model on a dataset
 
@@ -76,20 +84,14 @@ def train(dataset, model, tokenizer, batch_size=16, epochs=5, lr=2e-5, max_seq_l
         The dataset to finetune on
     model : GPT2LMHeadModel
         The model to finetune
-    tokenizer : GPT2Tokenizer
-        The tokenizer to use
     batch_size : int, optional
         The batch size to use, by default 16
     epochs : int, optional
         The number of epochs to train, by default 5
     lr : float, optional
         The learning rate to use, by default 2e-5
-    max_seq_len : int, optional
-        The maximum sequence length to use, by default 400
     warmup_steps : int, optional
         The number of warmup steps to use, by default 200
-    gpt2_type : str, optional
-        The type of GPT-2 model to use, by default "gpt2"
 
     Returns
     -------
@@ -97,9 +99,7 @@ def train(dataset, model, tokenizer, batch_size=16, epochs=5, lr=2e-5, max_seq_l
         The finetuned model
     """
 
-    acc_steps = 100
     device = torch.device("cpu")
-    #model = model.cuda()
     model.train()
 
     optimizer = AdamW(model.parameters(), lr=lr)
@@ -142,16 +142,18 @@ def train(dataset, model, tokenizer, batch_size=16, epochs=5, lr=2e-5, max_seq_l
 if __name__ == '__main__':
     # output directory
     path = Path(__file__).parents[1]
-    txts = load_txts(path / 'data' / 'lyrics')
-
-    # prep dataset
-    dataset = SongLyrics(data=txts, control_code="lyrics")
+    lyrics = load_txts(path / 'data' / 'lyrics')
+    lyrics = clean_lyrics(lyrics)
 
     # load tokenizer and model
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     model = GPT2LMHeadModel.from_pretrained('gpt2')
 
-    model = train(dataset, model, tokenizer)
+    # prep dataset
+    dataset = SongLyrics(lyrics, tokenizer, control_code="lyrics")
+
+
+    model = train(dataset, model)
 
     # save model
     torch.save(model.state_dict(), path / "mdl" / "finetuned_gpt-2.pt")
