@@ -93,7 +93,6 @@ def song_urls(artist_name: str, genius_token: str, n: int = 10):
         for hit in json['response']['hits']:
             if artist_name.lower() in hit['result']['primary_artist']['name'].lower():
                 song_info.append(hit)
-    
         # Collect song URL's from song objects
         for song in song_info:
             if (len(songs) < n):
@@ -105,10 +104,9 @@ def song_urls(artist_name: str, genius_token: str, n: int = 10):
         else:
             page += 1
        
-       # If no songs are found before page 10 is reached, return an empty list
+       # Search through a maximum of 20 pages 
         if page > 20:
-            print('No songs found for {}'.format(artist_name))
-            return []
+            break
         
     print('Found {} songs by {}'.format(len(songs), artist_name))
     return songs
@@ -235,14 +233,9 @@ if __name__ == '__main__':
 
 
     # artists to scrape
-    artists = ["Gasolin’", "Gasolin", "Tøsedrengene", "Poul Krebs", "Blæst",
-        "Birthe Kjr", "Tue West", "Suspekt", "Szhirley", "Brødrene Olsen", "Ray Dee Ohh", "Flemming Bamse Jørgensen",
-        "Rollo og King", "Back to Back", "Dodo & the Dodos",  "Bamses Venner", "Tørfisk", "Jakob Sveistrup", "Rocazino", "Danser med Drenge", "Sømændene", 
-        "Laban", "Tommy Seebach", "Alberte Winding", "Panamah", "Tobias Rahim"]
-
-
-    """ already scraped:
-    "Andreas Odbjerg", "Kim Larsen", "Sanne Salomonsen", "Thomas Helmig", "Lis Sørensen", 
+    artists = [
+        "Malk De Koijn", "Jooks", "Den gale pose", "Per Vers","UFO yepha", "Johnson", "USO",
+        "Andreas Odbjerg", "Kim Larsen", "Sanne Salomonsen", "Thomas Helmig", "Lis Sørensen", 
         "The Minds Of 99", "Medina", "Burhan G", "Peter Sommer", "Katinka Band", "Tessa", 
         "De Danske Hyrder", "Thomas Buttenschøn", "Rigmor", "Marie Key", "Nephew", 
         "Magtens Korridorer", "Bogfinkevej", "Tobias Rahim",  "Ukendt Kunstner",
@@ -253,11 +246,19 @@ if __name__ == '__main__':
         "Emil Kruse", "TopGunn", "Citybois", "Joey Moe",  "Jokeren", "Blak", "Hans Philip",
         "Anne Linnet","Lars Lilholt Band", "Shu-Bi-Dua", "Tim Christensen", "Lizzie", 
         "Hej Matematik", "Medina", "Anna David",  "Johnny Deluxe", "Rasmus Walter",
-        "Gnags", "John Mogensen",
+        "Gnags", "John Mogensen", "Suspekt", "guldimund", "Gasolin",  "Tøsedrengene", 
+        "Poul Krebs", "Blæst",  "Tue West", "Suspekt", "Szhirley", "Brødrene Olsen",
+        "Ray Dee Ohh", "Back to Back", "Dodo & the Dodos",  "Bamses Venner", "Tørfisk",
+        "Jakob Sveistrup", "Rocazino", "Danser med Drenge", "Laban", "Tommy Seebach",
+        "Panamah", "Tobias Rahim", "Birthe Kjær", "Jung", "Zar Paulo", "PATINA", "Joyce", 
+        "Kalaset", "Statisk", "Pauline", "Dusin", "Liss", "Kind mod kind", "Annika Aakjær", 
+        "Lars H.U.G.", "Sort sol", "Juncker","Undertekst", "Love shop", "Claus Hempler",
+        "Pil", "Simon Kvamm", "Niels Brandt", "Ussel", "Hugorm" , "Artigeardit", "Lamin",
+        "Lord Siva", "Sivas", "Emil Stabil", "ude af kontrol", "Page Four", "Gulddreng",
+        "Vild Smith", "Molo", "Soleima", "Bisse", "De eneste to", "Mikael Simpson", 
+        "Hymns from Nineveh", "Rasmus Nøhr", "Big Fat Snake", "Caroline Henderson","Søs Fenger",
+        "Stig Rossen", "Niarn", "Østkyst Hustlers",  "Jøden", "Clemens", "Raske Penge",]
 
-
-
-    """
     # number of songs to scrape per artist
     n_songs = 20
 
