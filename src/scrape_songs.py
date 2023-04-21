@@ -234,17 +234,22 @@ if __name__ == '__main__':
 
     # artists to scrape
     artists = [
+        "Specktors", "Gilli", "Flødeklinikken", "Klumben", "Rent mel",
+        "PIND", "UNG-SKAB", "BJØRN", "JOSVA", "KIDD", "Jimilian", "KATO",
+        "Cyd Williams",  "Franske piger", "EaggerStunn", "Danser med piger", "Hong Kong"
+        "Uro", "Mekdes", "Olivver", "Malte Ebert", "Thor Farlov",  "Xander Linnet",
+        "Mas", "knægt", "Marcus.wav", "Angående mig", "FRAADS", "Fastpoholmen", "Iiris",
         "Malk De Koijn", "Jooks", "Den gale pose", "Per Vers","UFO yepha", "Johnson", "USO",
         "Andreas Odbjerg", "Kim Larsen", "Sanne Salomonsen", "Thomas Helmig", "Lis Sørensen", 
         "The Minds Of 99", "Medina", "Burhan G", "Peter Sommer", "Katinka Band", "Tessa", 
         "De Danske Hyrder", "Thomas Buttenschøn", "Rigmor", "Marie Key", "Nephew", 
         "Magtens Korridorer", "Bogfinkevej", "Tobias Rahim",  "Ukendt Kunstner",
-        "Guldimund", "Ulige numre", "Gulddreng", "Pharfar",  "Natasja",
+        "Guldimund", "Ulige numre", "Gulddreng", "Pharfar",  "Natasja", "Iomfro",
         "Benjamin Hav", "Benal", "KESI", "Rasmus Seebach", "Søren Huss", "Barselona",
         "Carl Emil Petersen", "Karl William", "Danseorkesteret", "Kim Larsen", "Hjalmer",  
         "Folkeklubben", "Sys Bjerre", "C.V. Jørgensen", "Mads Langer", "Shaka Loveless",
         "Emil Kruse", "TopGunn", "Citybois", "Joey Moe",  "Jokeren", "Blak", "Hans Philip",
-        "Anne Linnet","Lars Lilholt Band", "Shu-Bi-Dua", "Tim Christensen", "Lizzie", 
+        "Anne Linnet", "Lars Lilholt Band", "Shu-Bi-Dua", "Tim Christensen", "Lizzie", 
         "Hej Matematik", "Medina", "Anna David",  "Johnny Deluxe", "Rasmus Walter",
         "Gnags", "John Mogensen", "Suspekt", "guldimund", "Gasolin",  "Tøsedrengene", 
         "Poul Krebs", "Blæst",  "Tue West", "Suspekt", "Szhirley", "Brødrene Olsen",
@@ -256,8 +261,9 @@ if __name__ == '__main__':
         "Pil", "Simon Kvamm", "Niels Brandt", "Ussel", "Hugorm" , "Artigeardit", "Lamin",
         "Lord Siva", "Sivas", "Emil Stabil", "ude af kontrol", "Page Four", "Gulddreng",
         "Vild Smith", "Molo", "Soleima", "Bisse", "De eneste to", "Mikael Simpson", 
-        "Hymns from Nineveh", "Rasmus Nøhr", "Big Fat Snake", "Caroline Henderson","Søs Fenger",
-        "Stig Rossen", "Niarn", "Østkyst Hustlers",  "Jøden", "Clemens", "Raske Penge",]
+        "Hymns from Nineveh", "Rasmus Nøhr", "Big Fat Snake", "Caroline Henderson", "Søs Fenger",
+        "Stig Rossen", "Niarn", "Østkyst Hustlers",  "Jøden", "Clemens", "Raske Penge"
+        ]
 
     # number of songs to scrape per artist
     n_songs = 20

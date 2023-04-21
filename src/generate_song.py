@@ -18,6 +18,27 @@ def parse_args():
     return parser.parse_args()
 
 def generate(model, tokenizer, prompt:str, entry_length:int = 30, temperature:float = 1.0):
+    """
+
+    Parameters
+    ----------
+    model : 
+        The model to generate from
+    tokenizer : 
+        The tokenizer
+    prompt : str
+        The prompt from which to generate text
+    entry_length : int
+        The number of tokens to generate
+    temperature : float
+        XXXX. Determines how deterministic the model is???
+
+    Returns
+    -------
+    generated: str
+        The prompt followed by the generated text
+        
+    """
     with torch.no_grad():
         generated = torch.tensor(tokenizer.encode(prompt)).unsqueeze(0)
 
@@ -29,8 +50,8 @@ def generate(model, tokenizer, prompt:str, entry_length:int = 30, temperature:fl
             next_token = torch.multinomial(F.softmax(logits, dim=-1), num_samples=1)
             generated = torch.cat((generated, next_token), dim=1)
 
-            if next_token in tokenizer.encode("<|endoftext|>"):
-                entry_finished = True
+            #if next_token in tokenizer.encode("<|endoftext|>"):
+            #    entry_finished = True
 
         output_list = list(generated.squeeze().numpy())
         generated = f"{tokenizer.decode(output_list)}<|endoftext|>" 
