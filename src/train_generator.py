@@ -8,7 +8,7 @@ Author: Laura Bock Paulsen (202005791@post.au.dk)
 
 from pathlib import Path
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, AdamW, get_linear_schedule_with_warmup
+from transformers import GPT2Tokenizer, GPT2LMHeadModel, get_linear_schedule_with_warmup
 import torch
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
@@ -21,7 +21,6 @@ class SongLyrics(Dataset):
         for dat in data:
             self.lyrics.append(torch.tensor(
                 self.tokenizer.encode(f"<|{control_code}|>{dat[:max_length]}<|endoftext|>")))
-        
         
         self.lyrics_count = len(self.lyrics)
             
@@ -58,11 +57,15 @@ def load_txts(path: Path):
     return txts
 
 def clean_lyrics(lyrics:list):
-    # Remove everything before the first time it says "Lyrics" (title of the song, contributor, etc.)
+
     for i, lyric in enumerate(lyrics):
-        lyrics[i] = lyric[lyric.find("Lyrics")+7:]
-    
-    
+        # Remove everything before the first time it says "Lyrics" (title of the song, contributor, etc.)
+        start = lyric.find("Lyrics")+7
+        # Remove suggestions at the end
+        stop = lyric.find("You might also like")
+        
+        lyrics[i] = lyric[start:stop]
+
     return lyrics
 
 def pack_tensor(new_tensor, packed_tensor, max_seq_len):
@@ -74,7 +77,8 @@ def pack_tensor(new_tensor, packed_tensor, max_seq_len):
         packed_tensor = torch.cat([new_tensor, packed_tensor[:, 1:]], dim=1)
         return packed_tensor, True, None
 
-def train(dataset, model, batch_size=16, epochs=5, lr=2e-5, warmup_steps=200):
+
+def train(dataset, model, batch_size=16, epochs=20, lr=2e-5, warmup_steps=200):
     """
     Finetunes a GPT-2 model on a dataset
 
@@ -102,7 +106,7 @@ def train(dataset, model, batch_size=16, epochs=5, lr=2e-5, warmup_steps=200):
     device = torch.device("cpu")
     model.train()
 
-    optimizer = AdamW(model.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=warmup_steps, num_training_steps=-1
     )
@@ -152,11 +156,7 @@ if __name__ == '__main__':
     # prep dataset
     dataset = SongLyrics(lyrics, tokenizer, control_code="lyrics")
 
-
     model = train(dataset, model)
 
     # save model
     torch.save(model.state_dict(), path / "mdl" / "finetuned_gpt-2.pt")
-
-
-
