@@ -5,23 +5,56 @@ from transformers import GPT2Tokenizer, GPT2LMHeadModel, AdamW, get_linear_sched
 import torch
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
+import torch.nn.functional as F
+import argparse
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--prompt", type = str, required = True)
+    parser.add_argument("--entry_length", type = int, default = 100)
+    parser.add_argument("--temperature", type = float, default = 1)
+    
+    return parser.parse_args()
 
-if __name__ == "__main__":
+def generate(model, tokenizer, prompt:str, entry_length:int = 30, temperature:float = 1.0):
+    with torch.no_grad():
+        generated = torch.tensor(tokenizer.encode(prompt)).unsqueeze(0)
+
+        for i in range(entry_length):
+            outputs = model(generated, labels=generated)
+            loss, logits = outputs[:2]
+            logits = logits[:, -1, :] / (temperature if temperature > 0 else 1.0)
+
+            next_token = torch.multinomial(F.softmax(logits, dim=-1), num_samples=1)
+            generated = torch.cat((generated, next_token), dim=1)
+
+            if next_token in tokenizer.encode("<|endoftext|>"):
+                entry_finished = True
+
+        output_list = list(generated.squeeze().numpy())
+        generated = f"{tokenizer.decode(output_list)}<|endoftext|>" 
+                
+    return generated
+
+
+def main(): 
+    args = parse_args()
     path = Path(__file__).parents[1]
     
     # load tokenizer and model
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     model = GPT2LMHeadModel.from_pretrained('gpt2')
 
-
     checkpoint = torch.load(path / "mdl" / "finetuned_gpt-2.pt")
-    model.load_state_dict(checkpoint['model_state_dict'])
-    #optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    #epoch = checkpoint['epoch']
-    #loss = checkpoint['loss']
+    model.load_state_dict(checkpoint)
 
     model.eval()
 
-    
+    input_sequence = f"<|lyrics|> {args.prompt}"
+    x = generate(model, tokenizer, input_sequence, entry_length=args.entry_length, temperature=args.temperature)
+    print(x)
+
+if __name__ == "__main__":
+    main()
+
