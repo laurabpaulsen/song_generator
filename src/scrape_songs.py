@@ -190,6 +190,17 @@ def check_lyrics(lyrics: str):
     
     return False
 
+def clean_lyrics(lyrics:list):
+    for i, lyric in enumerate(lyrics):
+        # Remove everything before the first time it says "Lyrics" (title of the song, contributor, etc.)
+        start = lyric.find("Lyrics")+7
+        # Remove suggestions at the end
+        stop = lyric.find("You might also like")
+        
+        lyrics[i] = lyric[start:stop]
+
+    return lyrics
+
 def main_scraper(artists, n_songs, save_path, genius_token):
     """
     Scrapes songs from a list of artists and saves them as as separate text files
@@ -209,6 +220,7 @@ def main_scraper(artists, n_songs, save_path, genius_token):
     """
     for artist in artists:
         lyrics = scrape_songs(artist, genius_token, n_songs)
+        lyrics = clean_lyrics(lyrics)
         
         for i, lyric in enumerate(lyrics):
             # check that language is danish and that the lyrics are not empty
