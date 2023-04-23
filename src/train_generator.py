@@ -1,17 +1,21 @@
 """
-Finetunes GPT-2 to generate danish song lyrics.
+Finetunes model to generate danish song lyrics.
 
 Inspired by https://towardsdatascience.com/how-to-fine-tune-gpt-2-for-text-generation-ae2ea53bc272
-
 Author: Laura Bock Paulsen (202005791@post.au.dk)
 """
 
 from pathlib import Path
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, get_linear_schedule_with_warmup
+from transformers import get_linear_schedule_with_warmup
 import torch
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", type = str, default="t5")
+
+    return parser.parse_args()
 
 class SongLyrics(Dataset):  
     def __init__(self, data, tokenizer, control_code, max_length=1024):
@@ -57,7 +61,6 @@ def load_txts(path: Path):
     return txts
 
 def clean_lyrics(lyrics:list):
-
     for i, lyric in enumerate(lyrics):
         # Remove everything before the first time it says "Lyrics" (title of the song, contributor, etc.)
         start = lyric.find("Lyrics")+7
@@ -86,7 +89,7 @@ def train(dataset, model, batch_size=16, epochs=20, lr=2e-5, warmup_steps=200):
     ----------
     dataset : Dataset
         The dataset to finetune on
-    model : GPT2LMHeadModel
+    model : transformers model
         The model to finetune
     batch_size : int, optional
         The batch size to use, by default 16
@@ -99,7 +102,7 @@ def train(dataset, model, batch_size=16, epochs=20, lr=2e-5, warmup_steps=200):
 
     Returns
     -------
-    GPT2LMHeadModel
+    model : transformers model
         The finetuned model
     """
 
@@ -143,15 +146,33 @@ def train(dataset, model, batch_size=16, epochs=20, lr=2e-5, warmup_steps=200):
     return model
 
 
+def load_model(model):
+    if model.lower() == "gpt-2":
+        from transformers import GPT2LMHeadModel, GPT2Tokenizer
+
+        # load tokenizer and model
+        tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+        model = GPT2LMHeadModel.from_pretrained('gpt2')
+
+    elif model.lower == "mt5":
+        from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+        tokenizer = AutoTokenizer.from_pretrained("google/mt5-large")
+        model = AutoModelForSeq2SeqLM.from_pretrained("google/mt5-large")
+    
+    return model, tokenizer
+
+
 if __name__ == '__main__':
+
+    args = parse_args()
     # output directory
     path = Path(__file__).parents[1]
     lyrics = load_txts(path / 'data' / 'lyrics')
     lyrics = clean_lyrics(lyrics)
 
     # load tokenizer and model
-    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-    model = GPT2LMHeadModel.from_pretrained('gpt2')
+    model, tokenizer = load_model(args.model)
 
     # prep dataset
     dataset = SongLyrics(lyrics, tokenizer, control_code="lyrics")
