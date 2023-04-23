@@ -14,6 +14,7 @@ def parse_args():
     parser.add_argument("--prompt", type = str, required = True)
     parser.add_argument("--entry_length", type = int, default = 100)
     parser.add_argument("--temperature", type = float, default = 1)
+    parser.add_argument("--model", type = str, default="t5")
     
     return parser.parse_args()
 
@@ -58,19 +59,29 @@ def generate(model, tokenizer, prompt:str, entry_length:int = 30, temperature:fl
                 
     return generated
 
+def load_model(model):
+    if model.lower() == "gpt-2":
+        # load tokenizer and model
+        tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+        model = GPT2LMHeadModel.from_pretrained('gpt2')
+
+        checkpoint = torch.load(path / "mdl" / "finetuned_gpt-2.pt")
+        model.load_state_dict(checkpoint)
+
+        model.eval()
+
+    elif model.lower == "mt5":
+        pass
+    
+    return model, tokenizer
+
+
 
 def main(): 
     args = parse_args()
     path = Path(__file__).parents[1]
     
-    # load tokenizer and model
-    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-    model = GPT2LMHeadModel.from_pretrained('gpt2')
-
-    checkpoint = torch.load(path / "mdl" / "finetuned_gpt-2.pt")
-    model.load_state_dict(checkpoint)
-
-    model.eval()
+    model, tokenizer = load_model(args.model)
 
     input_sequence = f"<|lyrics|> {args.prompt}"
     x = generate(model, tokenizer, input_sequence, entry_length=args.entry_length, temperature=args.temperature)
