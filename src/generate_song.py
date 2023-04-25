@@ -95,7 +95,7 @@ def main():
     
     model, tokenizer = load_model(args.model, path)
 
-    input_sequence = f"<|Lyrics|> {args.prompt}"
+    input_sequence = f"<|lyrics|> {args.prompt}"
     x = generate(model, tokenizer, input_sequence, entry_length=args.entry_length, temperature=args.temperature)
     print(x)
 
