@@ -58,7 +58,7 @@ def generate(model, tokenizer, prompt:str, entry_length:int = 30, temperature:fl
                 
     return generated
 
-def load_model(model):
+def load_model(model, path):
     path = Path(__file__).parents[1]
 
     if model.lower() == "gpt-2":
@@ -84,15 +84,16 @@ def load_model(model):
         
         model.eval()
     
-    return model, model
+    return model, tokenizer
 
 
 
 def main(): 
     args = parse_args()
+    path = Path(__file__).parents[1]
     
     
-    model, tokenizer = load_model(args.model)
+    model, tokenizer = load_model(args.model, path)
 
     input_sequence = f"<|Lyrics|> {args.prompt}"
     x = generate(model, tokenizer, input_sequence, entry_length=args.entry_length, temperature=args.temperature)
