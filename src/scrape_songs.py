@@ -135,7 +135,7 @@ def scrape_lyrics(song_url):
     except:
         print('Lyrics not found for {}'.format(song_url))
         return ''
-        
+
     #remove identifiers like chorus, verse, etc
     lyrics = re.sub(r'(\[.*?\])*', '', lyrics)
     lyrics = re.sub('\n{2}', '\n', lyrics)  # Gaps between verses
@@ -201,6 +201,25 @@ def clean_lyrics(lyrics:list):
 
     return lyrics
 
+def get_song_titles(lyrics):
+    titles = []
+
+    for txt in lyrics:
+        if txt == "":
+            titles.append("")
+        elif txt[0] == "1":
+            titles.append(txt[txt.find("Contributor")+12 : txt.find("Lyrics")-1])
+        else:
+            titles.append(txt[txt.find("Contributors")+13 : txt.find("Lyrics")-1])
+
+    
+    titles = [title.lower() for title in titles]
+    titles = [title.replace("/", "") for title in titles]
+    titles = [title.strip() for title in titles]
+    
+    return titles
+
+
 def main_scraper(artists, n_songs, save_path, genius_token):
     """
     Scrapes songs from a list of artists and saves them as as separate text files
@@ -220,13 +239,19 @@ def main_scraper(artists, n_songs, save_path, genius_token):
     """
     for artist in artists:
         lyrics = scrape_songs(artist, genius_token, n_songs)
+        # get song names
+        titles = get_song_titles(lyrics)
+
+
         lyrics = clean_lyrics(lyrics)
         
         for i, lyric in enumerate(lyrics):
-            # check that language is danish and that the lyrics are not empty
-            if check_lyrics(lyric):
+            # check that language is danish, that the lyrics are not empty, and that the title does not include remix
+            if (check_lyrics(lyric)) & ("remix" not in titles[i]):
                 # save lyrics as text file
-                filename = artist + '_' + str(i) + '.txt'
+                filename = artist + '_' + titles[i] + '.txt'
+                filename = filename.replace(" ", "-")
+
                 with open(os.path.join(save_path, filename), 'w') as f:
                     f.write(lyric)
 
@@ -248,7 +273,7 @@ if __name__ == '__main__':
     artists = [
         "Specktors", "Gilli", "Flødeklinikken", "Klumben", "Rent mel",
         "PIND", "UNG-SKAB", "BJØRN", "JOSVA", "KIDD", "Jimilian", "KATO",
-        "Cyd Williams",  "Franske piger", "EaggerStunn", "Danser med piger", "Hong Kong"
+        "Cyd Williams",  "Franske piger", "EaggerStunn", "Danser med piger", "Hong Kong",
         "Uro", "Mekdes", "Olivver", "Malte Ebert", "Thor Farlov",  "Xander Linnet",
         "Mas", "knægt", "Marcus.wav", "Angående mig", "FRAADS", "Fastpoholmen", "Iiris",
         "Malk De Koijn", "Jooks", "Den gale pose", "Per Vers","UFO yepha", "Johnson", "USO",
