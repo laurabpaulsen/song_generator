@@ -1,7 +1,6 @@
 
 from pathlib import Path
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, AdamW, get_linear_schedule_with_warmup
+from transformers import AdamW, get_linear_schedule_with_warmup
 import torch
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
@@ -14,7 +13,7 @@ def parse_args():
     parser.add_argument("--prompt", type = str, required = True)
     parser.add_argument("--entry_length", type = int, default = 100)
     parser.add_argument("--temperature", type = float, default = 1)
-    parser.add_argument("--model", type = str, default="t5")
+    parser.add_argument("--model", type = str, default="mt5")
     
     return parser.parse_args()
 
@@ -60,7 +59,11 @@ def generate(model, tokenizer, prompt:str, entry_length:int = 30, temperature:fl
     return generated
 
 def load_model(model):
+    path = Path(__file__).parents[1]
+
     if model.lower() == "gpt-2":
+        from transformers import GPT2Tokenizer, GPT2LMHeadModel
+        
         # load tokenizer and model
         tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
         model = GPT2LMHeadModel.from_pretrained('gpt2')
@@ -70,8 +73,16 @@ def load_model(model):
 
         model.eval()
 
-    elif model.lower == "mt5":
-        pass
+    elif model.lower() == "mt5":
+        from transformers import MT5ForConditionalGeneration, T5Tokenizer
+
+        mt5 = MT5ForConditionalGeneration.from_pretrained("google/mt5-base")
+        mt5_tok = T5Tokenizer.from_pretrained("google/mt5-base")
+
+        checkpoint = torch.load(path / "mdl" / "finetuned_mt5.pt")
+        model.load_state_dict(checkpoint)
+        
+        model.eval()
     
     return model, tokenizer
 
@@ -79,11 +90,11 @@ def load_model(model):
 
 def main(): 
     args = parse_args()
-    path = Path(__file__).parents[1]
+    
     
     model, tokenizer = load_model(args.model)
 
-    input_sequence = f"<|lyrics|> {args.prompt}"
+    input_sequence = f"<generate song lyrics continuing from:> {args.prompt}"
     x = generate(model, tokenizer, input_sequence, entry_length=args.entry_length, temperature=args.temperature)
     print(x)
 
