@@ -10,10 +10,12 @@ from transformers import get_linear_schedule_with_warmup
 import torch
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
+import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type = str, default="t5")
+    parser.add_argument("--model", type = str, default="mt5")
+    parser.add_argument("--epochs", type = int, default = 10)
 
     return parser.parse_args()
 
@@ -154,12 +156,12 @@ def load_model(model):
         tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
         model = GPT2LMHeadModel.from_pretrained('gpt2')
 
-    elif model.lower == "mt5":
-        from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+    elif model.lower() == "mt5":
+        from transformers import MT5Tokenizer, TFMT5ForConditionalGeneration
 
-        tokenizer = AutoTokenizer.from_pretrained("google/mt5-large")
-        model = AutoModelForSeq2SeqLM.from_pretrained("google/mt5-large")
-    
+        tokenizer = MT5Tokenizer.from_pretrained("google/mt5-base")
+        model = TFMT5ForConditionalGeneration.from_pretrained("google/mt5-base")
+        
     return model, tokenizer
 
 
@@ -177,7 +179,7 @@ if __name__ == '__main__':
     # prep dataset
     dataset = SongLyrics(lyrics, tokenizer, control_code="lyrics")
 
-    model = train(dataset, model)
+    model = train(dataset, model, epochs=args.epochs)
 
     # save model
-    torch.save(model.state_dict(), path / "mdl" / "finetuned_gpt-2.pt")
+    torch.save(model.state_dict(), path / "mdl" / f"finetuned_{args.model}.pt")
