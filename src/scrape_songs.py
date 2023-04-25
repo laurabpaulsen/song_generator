@@ -194,10 +194,14 @@ def clean_lyrics(lyrics:list):
     for i, lyric in enumerate(lyrics):
         # Remove everything before the first time it says "Lyrics" (title of the song, contributor, etc.)
         start = lyric.find("Lyrics")+7
+       
         # Remove suggestions at the end
         stop = lyric.find("You might also like")
         
         lyrics[i] = lyric[start:stop]
+        
+        # lower case
+        lyrics[i] = lyric.lower()
 
     return lyrics
 
