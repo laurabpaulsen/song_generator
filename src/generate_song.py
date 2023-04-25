@@ -76,15 +76,15 @@ def load_model(model):
     elif model.lower() == "mt5":
         from transformers import MT5ForConditionalGeneration, T5Tokenizer
 
-        mt5 = MT5ForConditionalGeneration.from_pretrained("google/mt5-base")
-        mt5_tok = T5Tokenizer.from_pretrained("google/mt5-base")
+        model = MT5ForConditionalGeneration.from_pretrained("google/mt5-base")
+        model = T5Tokenizer.from_pretrained("google/mt5-base")
 
         checkpoint = torch.load(path / "mdl" / "finetuned_mt5.pt")
         model.load_state_dict(checkpoint)
         
         model.eval()
     
-    return model, tokenizer
+    return model, model
 
 
 
@@ -94,7 +94,7 @@ def main():
     
     model, tokenizer = load_model(args.model)
 
-    input_sequence = f"<generate song lyrics continuing from:> {args.prompt}"
+    input_sequence = f"<|Lyrics|> {args.prompt}"
     x = generate(model, tokenizer, input_sequence, entry_length=args.entry_length, temperature=args.temperature)
     print(x)
 
