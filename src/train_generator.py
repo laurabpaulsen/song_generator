@@ -20,7 +20,24 @@ def parse_args():
     return parser.parse_args()
 
 class SongLyrics(Dataset):  
-    def __init__(self, data, tokenizer, control_code, max_length=1024):
+    def __init__(self, data, tokenizer, control_code, max_length=1024, truncate=False):
+        """
+        Creates a dataset of song lyrics
+
+        Parameters
+        ----------
+        data : list
+            A list of strings containing the lyrics
+        tokenizer : transformers tokenizer
+            The tokenizer to use
+        control_code : str
+            The control code to use
+        max_length : int, optional
+            The maximum length of a sequence, by default 1024
+        truncate : bool, optional
+            Whether to truncate the dataset, by default False
+        """
+        
         self.tokenizer = tokenizer
         self.lyrics = []
 
@@ -28,6 +45,9 @@ class SongLyrics(Dataset):
             self.lyrics.append(torch.tensor(
                 self.tokenizer.encode(f"<|{control_code}|>{dat[:max_length]}<|endoftext|>")))
         
+        if truncate:
+            self.lyrics = self.lyrics[:500] # for testing purposes
+
         self.lyrics_count = len(self.lyrics)
             
     def __len__(self):
