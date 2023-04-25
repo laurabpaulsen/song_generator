@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
 import re
-import os
 from pathlib import Path
 from langdetect import detect
 
@@ -246,7 +245,6 @@ def main_scraper(artists, n_songs, save_path, genius_token):
         # get song names
         titles = get_song_titles(lyrics)
 
-
         lyrics = clean_lyrics(lyrics)
         
         for i, lyric in enumerate(lyrics):
@@ -256,7 +254,7 @@ def main_scraper(artists, n_songs, save_path, genius_token):
                 filename = artist + '_' + titles[i] + '.txt'
                 filename = filename.replace(" ", "-")
 
-                with open(os.path.join(save_path, filename), 'w') as f:
+                with open(save_path / filename, 'w') as f:
                     f.write(lyric)
 
 if __name__ == '__main__':
@@ -265,8 +263,8 @@ if __name__ == '__main__':
     output_dir = path.parents[1] / 'data' / 'lyrics'
 
     # ensure output directory exists
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
 
     # get token from txt
     with open(path.parents[1] / "TOKEN.txt") as f:
