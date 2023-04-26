@@ -42,7 +42,6 @@ def get_song_id(artist_id):
             # If page_songs is empty, quit
             next_page = False
 
-
 # Get artist object from Genius API
 def request_artist_info(artist_name, page, genius_token):
     """ 
@@ -191,16 +190,15 @@ def check_lyrics(lyrics: str):
 
 def clean_lyrics(lyrics:list):
     for i, lyric in enumerate(lyrics):
-        # Remove everything before the first time it says "Lyrics" (title of the song, contributor, etc.)
-        start = lyric.find("Lyrics")+7
+        lyric = lyric.lower()
+        # Remove everything before the first time it says "lyrics" (title of the song, contributor, etc.)
+        start = lyric.find("lyrics")+7
        
         # Remove suggestions at the end
-        stop = lyric.find("You might also like")
+        stop = lyric.find("you might also like")
         
         lyrics[i] = lyric[start:stop]
         
-        # lower case
-        lyrics[i] = lyric.lower()
 
     return lyrics
 
@@ -243,16 +241,13 @@ def main_scraper(artists, n_songs, save_path, genius_token):
     for artist in artists:
         lyrics = scrape_songs(artist, genius_token, n_songs)
         # get song names
-        titles = get_song_titles(lyrics)
-
         lyrics = clean_lyrics(lyrics)
         
         for i, lyric in enumerate(lyrics):
             # check that language is danish, that the lyrics are not empty, and that the title does not include remix
-            if (check_lyrics(lyric)) & ("remix" not in titles[i]):
+            if check_lyrics(lyric):
                 # save lyrics as text file
-                filename = artist + '_' + titles[i] + '.txt'
-                filename = filename.replace(" ", "-")
+                filename = artist + '_' + str(i) + '.txt'
 
                 with open(save_path / filename, 'w') as f:
                     f.write(lyric)
