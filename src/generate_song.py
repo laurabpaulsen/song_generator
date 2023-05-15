@@ -54,7 +54,7 @@ def generate(model, tokenizer, prompt:str, entry_length:int = 30, temperature:fl
             #    entry_finished = True
 
         output_list = list(generated.squeeze().numpy())
-        generated = f"{tokenizer.decode(output_list)}<|endoftext|>" 
+        generated = tokenizer.decode(output_list, skip_special_tokens=True) 
                 
     return generated
 

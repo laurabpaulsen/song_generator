@@ -10,6 +10,7 @@ The data consists of a collection of songs from danish artists. The data is scra
 ```
 bash setup.sh
 ```
+
 3. Activate the environment
 ```
 source env/bin/activate
@@ -19,13 +20,17 @@ source env/bin/activate
 ```
 python src/scrape_songs.py
 ```
+
 5. Train a language model (can be either gpt-2 or mt5)
 ```
 python src/train_generator.py --model gpt2 --epochs 10
+python src/train_generator.py --model mt5 --epochs 10
 ```
+
 6. Generate new songs
 ```
 python src/generate_songs.py --model gpt2 --prompt "insert first few lines of song here"
+python src/generate_songs.py --model mt5 --prompt "insert first few lines of song here"
 ```
 
 

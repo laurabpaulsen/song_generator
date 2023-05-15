@@ -14,6 +14,51 @@ def parse_args():
     return parser.parse_args()
 
 
+class SongLyrics(Dataset):  
+    def __init__(self, lyrics, tokenizer, max_length=1024):
+        """
+        Creates a dataset of song lyrics
+
+        Parameters
+        ----------
+        lyrics : list
+            A list of strings containing the lyrics
+        tokenizer : transformers tokenizer
+            The tokenizer to use
+        control_code : str
+            The control code to use
+        max_length : int, optional
+            The maximum length of a sequence, by default 1024
+        truncate : bool, optional
+            Whether to truncate the dataset, by default False
+        """
+
+        self.tokenizer = tokenizer
+        self.prompt = []
+        self.target = []
+
+        # create a dataset from the list of strings
+        df = pd.DataFrame(lyrics, columns=['lyrics'])
+        # check that there is atleast 50 words in each song
+        df = df[df['lyrics'].apply(lambda x: len(x.split()) > 50)]
+
+        # split into prompt and target (first 20 words are prompt, rest are target)
+        df['prompt']=df['lyrics'].apply(lambda x: ' '.join(x.split()[:20]))
+        df['target']=df['lyrics'].apply(lambda x: ' '.join(x.split()[20:]))
+
+        for i, row in df.iterrows():
+            self.prompt.append(torch.tensor(
+                self.tokenizer.encode(f"{row['prompt']}<|endoftext|>")))
+
+            self.target.append(torch.tensor(
+                self.tokenizer.encode(f"{row['target'][:max_length]}<|endoftext|>")))
+
+    def __len__(self):
+        return len(self.prompt)
+        
+    def __getitem__(self,idx):
+        return self.prompt[idx], self.target[idx]
+
 def load_txts(path: Path):
     """
     Loads all the txt files in a directory
@@ -50,8 +95,6 @@ def clean_lyrics(lyrics:list):
 
     return lyrics
 
-def extract_n_words(str, n):
-    return ' '.join(str.split()[:n])
 
 def load_model(model):
     if model.lower() == "gpt-2":
@@ -69,6 +112,33 @@ def load_model(model):
         
     return model, tokenizer
 
+
+def finetune_model(model, dataloader, epochs, batch_size = 24):
+    # train the model
+    model.train()
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=2e-5)
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=200, num_training_steps=-1)
+
+    loss=0
+
+    for epoch in range(epochs):
+        print(f"Training epoch {epoch}")
+        print(loss)
+        for idx, entry in tqdm(enumerate(dataloader)):
+
+            outputs = model(entry[0].squeeze(), labels=entry[0].squeeze())
+            loss = outputs[0]
+            loss.backward()
+
+            optimizer.step()
+            scheduler.step()
+            optimizer.zero_grad()
+            model.zero_grad()
+
+    return model
+
+
 def main():
     args = parse_args()
     
@@ -77,45 +147,16 @@ def main():
     lyrics = load_txts(path / 'data' / 'lyrics')
     lyrics = clean_lyrics(lyrics)
 
-    # create a dataset from the list of strings
-    df = pd.DataFrame(lyrics, columns=['lyrics'])
-    # check that there is atleast 50 words in each song
-    df = df[df['lyrics'].apply(lambda x: len(x.split()) > 50)]
-
-    # split into prompt and target (first 20 words are prompt, rest are target)
-    df['prompt']=df['lyrics'].apply(lambda x: ' '.join(x.split()[:20]))
-    df['target']=df['lyrics'].apply(lambda x: ' '.join(x.split()[20:]))
-
     # load model and tokenizer
     model, tokenizer = load_model(args.model)
 
-    # tokenize prompt and target
-    df['prompt_tokenized'] = df['prompt'].apply(lambda x: tokenizer.encode(x, return_tensors='pt'))
-    df['target_tokenized'] = df['target'].apply(lambda x: tokenizer.encode(x, return_tensors='pt'))
+    dataset = SongLyrics(lyrics, tokenizer)
+    train_dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
-    df = df[['prompt_tokenized', 'target_tokenized']]
-
-    # train the model
-    model.train()
-
-    train_dataloader = DataLoader(Dataset(df), batch_size=1, shuffle=True)
-    optimizer = torch.optim.Adam(model.parameters(), lr=2e-5)
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=200, num_training_steps=-1)
-
-    for epoch in range(args.epochs):
-        losses = []
-        for batch in tqdm(train_dataloader):
-            optimizer.zero_grad()
-            input_ids = batch['prompt_tokenized'].squeeze()
-            labels = batch['target_tokenized'].squeeze()
-            outputs = model(input_ids, labels=labels)
-            loss = outputs[0]
-            loss.backward()
-            optimizer.step()
-            scheduler.step()
-            losses.append(loss.item())
-        print(f'epoch {epoch+1}: mean loss: {sum(losses)/len(losses)}')
+    model = finetune_model(model, train_dataloader, args.epochs)
     
     # save the model
     torch.save(model.state_dict(), path / "mdl" / f"finetuned_{args.model}.pt")
 
+if __name__ == "__main__":
+    main()
