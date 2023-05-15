@@ -4,3 +4,4 @@ requests
 langdetect
 transformers
 torch
+sentencepiece

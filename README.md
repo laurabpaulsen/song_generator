@@ -6,28 +6,29 @@ The data consists of a collection of songs from danish artists. The data is scra
 
 ## Usage
 1. Clone the repository
-2. Create a virtual environment and install the required packages
+2. Acquire a API key from [Genius](https://genius.com/api-clients) and copy-paste it into the `TOKEN.txt` file
+3. Create a virtual environment and install the required packages
 ```
 bash setup.sh
 ```
 
-3. Activate the environment
+4. Activate the environment
 ```
 source env/bin/activate
 ```
 
-4. Scrape songs from Genius.com
+5. Scrape songs from Genius.com
 ```
 python src/scrape_songs.py
 ```
 
-5. Train a language model (can be either gpt-2 or mt5)
+6. Train a language model (can be either gpt-2 or mt5)
 ```
 python src/train_generator.py --model gpt2 --epochs 10
 python src/train_generator.py --model mt5 --epochs 10
 ```
 
-6. Generate new songs
+7. Generate new songs
 ```
 python src/generate_songs.py --model gpt2 --prompt "insert first few lines of song here"
 python src/generate_songs.py --model mt5 --prompt "insert first few lines of song here"
