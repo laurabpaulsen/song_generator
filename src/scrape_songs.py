@@ -1,8 +1,13 @@
+"""
+
+"""
+
 from bs4 import BeautifulSoup
 import requests
 import re
 from pathlib import Path
 from langdetect import detect
+from tqdm import tqdm
 
 def get_json(path, genius_token):
     '''Send request and get response in json format.'''
@@ -129,18 +134,10 @@ def scrape_lyrics(song_url):
 
     # Scrape the song lyrics from the HTML
     try:
-        lyrics = html.find("div", class_=re.compile("^lyrics$|Lyrics__Root")).get_text()
+        lyrics = html.find("div", class_=re.compile("^lyrics$|Lyrics__Root")).get_text(separator="\n")
     except:
         print('Lyrics not found for {}'.format(song_url))
         return ''
-
-    #remove identifiers like chorus, verse, etc
-    lyrics = re.sub(r'(\[.*?\])*', '', lyrics)
-    lyrics = re.sub('\n{2}', '\n', lyrics)  # Gaps between verses
-
-    # add a space everytime there is a small letter followed by a capital letter (solves problem with new lines adding two words together)
-    # does not work with ÆØÅ, possible future improvement
-    lyrics = re.sub(r'([a-z])([A-Z])', r'\1 \2', lyrics)
     
     return lyrics
 
@@ -188,39 +185,6 @@ def check_lyrics(lyrics: str):
     
     return False
 
-def clean_lyrics(lyrics:list):
-    for i, lyric in enumerate(lyrics):
-        lyric = lyric.lower()
-        # Remove everything before the first time it says "lyrics" (title of the song, contributor, etc.)
-        start = lyric.find("lyrics")+7
-       
-        # Remove suggestions at the end
-        stop = lyric.find("you might also like")
-        
-        lyrics[i] = lyric[start:stop]
-        
-
-    return lyrics
-
-def get_song_titles(lyrics):
-    titles = []
-
-    for txt in lyrics:
-        if txt == "":
-            titles.append("")
-        elif txt[0] == "1":
-            titles.append(txt[txt.find("Contributor")+12 : txt.find("Lyrics")-1])
-        else:
-            titles.append(txt[txt.find("Contributors")+13 : txt.find("Lyrics")-1])
-
-    
-    titles = [title.lower() for title in titles]
-    titles = [title.replace("/", "") for title in titles]
-    titles = [title.strip() for title in titles]
-    
-    return titles
-
-
 def main_scraper(artists, n_songs, save_path, genius_token):
     """
     Scrapes songs from a list of artists and saves them as as separate text files
@@ -238,10 +202,8 @@ def main_scraper(artists, n_songs, save_path, genius_token):
     -------
     None
     """
-    for artist in artists:
+    for artist in tqdm(artists):
         lyrics = scrape_songs(artist, genius_token, n_songs)
-        # get song names
-        lyrics = clean_lyrics(lyrics)
         
         for i, lyric in enumerate(lyrics):
             # check that language is danish, that the lyrics are not empty, and that the title does not include remix
@@ -252,7 +214,7 @@ def main_scraper(artists, n_songs, save_path, genius_token):
                 with open(save_path / filename, 'w') as f:
                     f.write(lyric)
 
-if __name__ == '__main__':
+def main():
     # output directory
     path = Path(__file__)
     output_dir = path.parents[1] / 'data' / 'lyrics'
@@ -292,7 +254,7 @@ if __name__ == '__main__':
         "Panamah", "Tobias Rahim", "Birthe Kjær", "Jung", "Zar Paulo", "PATINA", "Joyce", 
         "Kalaset", "Statisk", "Pauline", "Dusin", "Liss", "Kind mod kind", "Annika Aakjær", 
         "Lars H.U.G.", "Sort sol", "Juncker","Undertekst", "Love shop", "Claus Hempler",
-        "Pil", "Simon Kvamm", "Niels Brandt", "Ussel", "Hugorm" , "Artigeardit", "Lamin",
+        "Pil", "Simon Kvamm", "Niels Brandt", "Ussel", "Hugorm" , "Artigeardit",
         "Lord Siva", "Sivas", "Emil Stabil", "ude af kontrol", "Page Four", "Gulddreng",
         "Vild Smith", "Molo", "Soleima", "Bisse", "De eneste to", "Mikael Simpson", 
         "Hymns from Nineveh", "Rasmus Nøhr", "Big Fat Snake", "Caroline Henderson", "Søs Fenger",
@@ -304,3 +266,8 @@ if __name__ == '__main__':
 
     main_scraper(artists, n_songs, output_dir, genius_token)
 
+
+
+if __name__ == '__main__':
+    main()
+    
