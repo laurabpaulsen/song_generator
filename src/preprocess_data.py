@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import re
+import string
 
 
 def load_txts(directory: Path):
@@ -69,8 +70,15 @@ def create_df(lyrics: list):
 
     for lyric in lyrics:
         sentences = lyric.split("\n")
+
+        # remove specified special characters
+        sentences = [sent.translate(str.maketrans('', '', string.punctuation)) for sent in sentences]
+
+        sentences = [sent for sent in sentences if len(sent) > 5]
+
         for i, sentence in enumerate(sentences[:-1]):
-            df = df.append({"input": sentence, "target": sentences[i+1]}, ignore_index=True)
+            tmp_data = pd.DataFrame.from_dict({"input": [sentence], "target": [sentences[i+1]]})
+            df = pd.concat([df, tmp_data], ignore_index=True)
 
     return df
 

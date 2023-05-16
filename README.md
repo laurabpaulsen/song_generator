@@ -30,8 +30,8 @@ python src/train_generator.py --model mt5 --epochs 10
 
 7. Generate new songs
 ```
-python src/generate_songs.py --model gpt2 --prompt "insert first few lines of song here"
-python src/generate_songs.py --model mt5 --prompt "insert first few lines of song here"
+python src/generate_song.py --model gpt2 --prompt "insert first few lines of song here"
+python src/generate_song.py --model mt5 --prompt "insert first few lines of song here"
 ```
 
 

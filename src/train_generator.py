@@ -7,6 +7,8 @@ import argparse
 import pandas as pd
 import re
 import random
+from torch.nn.utils.rnn import pad_sequence
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -81,71 +83,31 @@ def finetune_model(model, dataloader, epochs, batch_size=152):
 
     return model
 
+
 class SongLyrics(Dataset):
-    def __init__(self, lyrics_generator, tokenizer, max_length=1024):
+    def __init__(self, lyrics_df, tokenizer):
         self.tokenizer = tokenizer
-        self.prompt = []
-        self.target = []
-
-        for lyric in lyrics_generator:
-            lines = lyric.split("\n")  # Split into lines
-
-            # Generate prompt and target pairs based on line boundaries
-            for i in range(len(lines) - 1):
-                prompt = " ".join(lines[i])
-                target = " ".join(lines[i + 1])
-
-                prompt_enc = self.tokenizer.encode(
-                    prompt, max_length=max_length, truncation=True
-                )
-                target_enc = self.tokenizer.encode(
-                    target, max_length=max_length, truncation=True
-                )
-
-                # Ensure consistent sequence length
-                prompt_enc = prompt_enc[:max_length]
-                target_enc = target_enc[:max_length]
-
-                # Pad sequences if necessary
-                prompt_enc = self._pad_sequence(prompt_enc, max_length)
-                target_enc = self._pad_sequence(target_enc, max_length)
-
-                self.prompt.append(torch.tensor(prompt_enc))
-                self.target.append(torch.tensor(target_enc))
+        self.lyrics_df = lyrics_df
     
     def __len__(self):
-        return len(self.prompt)
-
+        return len(self.lyrics_df)
+    
     def __getitem__(self, idx):
-        return self.prompt[idx], self.target[idx]
+        prompt = self.lyrics_df.iloc[idx]["input"]
+        target = self.lyrics_df.iloc[idx]["target"]
 
-    def _pad_sequence(self, sequence, max_length):
-        padding_length = max_length - len(sequence)
-        return sequence + [self.tokenizer.pad_token_id] * padding_length
+        prompt_enc = self.tokenizer.encode(prompt, truncation=True)
+        target_enc = self.tokenizer.encode(target, truncation=True)
+
+        return torch.tensor(prompt_enc), torch.tensor(target_enc)
+
+def collate_fn(batch):
+    prompts, targets = zip(*batch)
+    padded_prompts = pad_sequence(prompts, batch_first=True)
+    padded_targets = pad_sequence(targets, batch_first=True)
+    return padded_prompts, padded_targets
 
 
-def lyrics_generator(file_paths: list):
-    """
-    Loads and cleans all the txt files given a list of file paths
-
-    Parameters
-    ----------
-    file_paths : list
-        A list of paths to individual txt files
-
-    Returns
-    -------
-    generator
-        A generator that yields the cleaned lyrics
-    """
-    def lyric_generator():
-        for file_path in file_paths:
-            with open(file_path, "r") as file:
-                lyrics = file.read()
-                cleaned_lyrics = clean_lyrics([lyrics])
-                yield lyric[0]
-
-    return lyric_generator()
 
 def main():
     batch_size = 24
@@ -153,16 +115,16 @@ def main():
     
     # output directory
     path = Path(__file__).parents[1]
-    txt_path = path / 'data' / 'lyrics'
+    lyrics_path = path / 'data' / 'lyrics.csv'
 
-    txt_paths = list(txt_path.iterdir())[:20]
-
-    lyrics = lyrics_generator(txt_paths)
+    lyrics = pd.read_csv(lyrics_path)
+    #lyrics = lyrics.sample(10000) # just for testing!!
+    
     # load model and tokenizer
     model, tokenizer = load_model(args.model)
 
     dataset = SongLyrics(lyrics, tokenizer)
-    train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
 
     model = finetune_model(model, train_dataloader, args.epochs, batch_size)
     
