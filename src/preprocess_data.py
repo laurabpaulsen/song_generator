@@ -6,6 +6,8 @@ import numpy as np
 from pathlib import Path
 import re
 import string
+from transformers import MT5Tokenizer
+
 
 
 def load_txts(directory: Path):
@@ -30,6 +32,9 @@ def load_txts(directory: Path):
 
     return txts
 
+def tokenize(tokenizer, txt):
+    return tokenizer.encode(txt, truncation=True)
+
 
 def preprocess_lyrics(lyrics: list):
     for i, lyric in enumerate(lyrics):
@@ -51,7 +56,7 @@ def preprocess_lyrics(lyrics: list):
     return lyrics
 
 
-def create_df(lyrics: list):
+def create_df(lyrics: list, tokenizer):
     """
     Creates a pandas dataframe with the a sentence from the lyrics and the following sentence
 
@@ -80,6 +85,10 @@ def create_df(lyrics: list):
             tmp_data = pd.DataFrame.from_dict({"input": [sentence], "target": [sentences[i+1]]})
             df = pd.concat([df, tmp_data], ignore_index=True)
 
+    
+    df["input_tkn"] = df["input"].apply(lambda x: tokenize(tokenizer, x))
+    df["target_tkn"] = df["target"].apply(lambda x: tokenize(tokenizer, x))
+
     return df
 
 def main():
@@ -87,11 +96,13 @@ def main():
     lyrics_path = path.parents[1] / "data" / "lyrics"
     output_path = path.parents[1] / "data" / "lyrics.csv"
 
+    tokenizer = MT5Tokenizer.from_pretrained("google/mt5-base")
+
     lyrics = load_txts(lyrics_path)
 
     lyrics = preprocess_lyrics(lyrics)
 
-    df = create_df(lyrics)
+    df = create_df(lyrics, tokenizer)
 
     df.to_csv(output_path, index=False)
 
