@@ -91,11 +91,6 @@ def create_df(lyrics: list, tokenizer):
     df["input_tkn"] = df["input"].apply(lambda x: tokenize(tokenizer, x))
     df["target_tkn"] = df["target"].apply(lambda x: tokenize(tokenizer, x))
 
-    # pad sequences
-    df["input_tkn"] = pad_sequence([torch.tensor(x) for x in df["input_tkn"]], batch_first=True)
-    df["target_tkn"] = pad_sequence([torch.tensor(x) for x in df["target_tkn"]], batch_first=True)
-
-
     return df
 
 def main():
